@@ -35,6 +35,19 @@ Application web de **pilotage chantier** pour GL Cuisines (PME artisanale de cui
 
 ---
 
+## ☁️ Prévisualiser sur GitHub (Codespaces)
+
+Pour essayer l'app sans rien installer localement :
+
+1. Sur GitHub, ouvre le repo → bouton vert **« Code »** → onglet **Codespaces** → **« Create codespace on main »**.
+2. Attends ~2 minutes (le container installe Node + Postgres + les dépendances + lance le seed).
+3. Une notification VS Code propose d'**ouvrir l'app sur le port 3000** → clique dessus.
+4. L'app s'ouvre dans un nouvel onglet avec les 3 projets de démo chargés.
+
+> Codespaces est gratuit jusqu'à 60h/mois sur un compte GitHub perso. Tout est déjà configuré dans `.devcontainer/` (Node 22 + Postgres 16 + seed auto).
+
+---
+
 ## 🚀 Démarrage local
 
 ```bash
