@@ -8,35 +8,11 @@ import { LIBELLES_TYPE_PROJET } from "@/lib/validations/projet";
 import { calculerAlertes } from "@/lib/metier/alertes";
 import { joursAvantSemaine } from "@/lib/metier/semaines";
 import { WorkflowInline } from "./_WorkflowInline";
+import { TableauCommandesProjet } from "@/components/metier/TableauCommandesProjet";
+import { listerFournisseurs } from "@/lib/queries/commandes";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-const LIBELLES_STATUT_COMMANDE = {
-  non_envoye: "Non envoyée",
-  envoye: "Envoyée",
-  confirme: "Confirmée",
-  expedie: "Expédiée",
-  livre: "Livrée",
-  reliquat: "Reliquat",
-} as const;
-
-const LIBELLES_STATUT_LIVRAISON = {
-  en_attente: "En attente",
-  livre: "Livrée",
-  partiel: "Partielle",
-  retard: "Retard",
-} as const;
-
-const LIBELLES_CATEGORIE = {
-  electromenagers: "Électroménagers",
-  meubles: "Meubles",
-  accessoires: "Accessoires",
-  plan_travail: "Plan de travail",
-  credence: "Crédence",
-  fond_hotte: "Fond de hotte",
-  sanitaires: "Sanitaires",
-} as const;
 
 export default async function FicheProjetPage({
   params,
@@ -44,7 +20,10 @@ export default async function FicheProjetPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const projet = await getProjetById(id);
+  const [projet, fournisseurs] = await Promise.all([
+    getProjetById(id),
+    listerFournisseurs(),
+  ]);
   if (!projet) notFound();
 
   const jours = joursAvantSemaine(projet.semainePose, projet.anneePose);
@@ -155,57 +134,21 @@ export default async function FicheProjetPage({
 
         {/* ─── Commandes ─── */}
         <TabsContent value="commandes">
-          {projet.commandes.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucune commande — à gérer au Sprint 3.</p>
-          ) : (
-            <div className="overflow-hidden rounded-md border border-slate-200">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-600">
-                  <tr>
-                    <th className="px-3 py-2">Catégorie</th>
-                    <th className="px-3 py-2">Fournisseur</th>
-                    <th className="px-3 py-2">Statut</th>
-                    <th className="px-3 py-2">Livraison prévue</th>
-                    <th className="px-3 py-2">Livraison</th>
-                    <th className="px-3 py-2">Essentielle</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {projet.commandes.map((c) => (
-                    <tr key={c.id}>
-                      <td className="px-3 py-2">{LIBELLES_CATEGORIE[c.categorie]}</td>
-                      <td className="px-3 py-2">{c.fournisseur.nom}</td>
-                      <td className="px-3 py-2">
-                        {LIBELLES_STATUT_COMMANDE[c.statutCommande]}
-                      </td>
-                      <td className="px-3 py-2 font-mono text-xs">
-                        {c.semaineLivraisonPrevue ?? "—"}
-                      </td>
-                      <td
-                        className={cn(
-                          "px-3 py-2 text-xs font-semibold",
-                          c.statutLivraison === "retard" && "text-red-700",
-                          c.statutLivraison === "livre" && "text-green-700",
-                          c.statutLivraison === "partiel" && "text-orange-700",
-                        )}
-                      >
-                        {LIBELLES_STATUT_LIVRAISON[c.statutLivraison]}
-                      </td>
-                      <td className="px-3 py-2">
-                        {c.essentielle ? (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-800">
-                            Essentielle
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-500">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <TableauCommandesProjet
+            projetId={projet.id}
+            commandes={projet.commandes.map((c) => ({
+              id: c.id,
+              categorie: c.categorie,
+              fournisseurId: c.fournisseurId,
+              fournisseurNom: c.fournisseur.nom,
+              statutCommande: c.statutCommande,
+              semaineLivraisonPrevue: c.semaineLivraisonPrevue,
+              statutLivraison: c.statutLivraison,
+              essentielle: c.essentielle,
+              remarque: c.remarque,
+            }))}
+            fournisseurs={fournisseurs.map((f) => ({ id: f.id, nom: f.nom }))}
+          />
         </TabsContent>
 
         {/* ─── Planning ─── */}
