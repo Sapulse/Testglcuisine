@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { projetsAvecClient, listerFournisseursRef } from "@/lib/queries/referentiels";
 import { FormulaireSav } from "./_Formulaire";
+export const dynamic = "force-dynamic";
+
 
 export default async function NouveauSavPage() {
   const [projets, fournisseurs] = await Promise.all([

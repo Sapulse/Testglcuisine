@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { listerCommandesTransverse, listerFournisseurs } from "@/lib/queries/commandes";
 import { CommandesListeClient } from "./_CommandesListeClient";
+export const dynamic = "force-dynamic";
+
 
 export default async function CommandesPage() {
   const [commandes, fournisseurs] = await Promise.all([

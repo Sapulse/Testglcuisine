@@ -12,6 +12,9 @@ import {
   Library,
   Menu,
   X,
+  BarChart3,
+  HardHat,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +30,9 @@ const ENTREES: Entree[] = [
   { label: "Planning", href: "/planning", icone: CalendarDays },
   { label: "Commandes", href: "/commandes", icone: ShoppingCart },
   { label: "SAV", href: "/sav", icone: Wrench },
+  { label: "Analytics", href: "/analytics", icone: BarChart3 },
+  { label: "Vue poseur", href: "/poseur", icone: HardHat },
+  { label: "Import Excel", href: "/import", icone: Upload },
   { label: "Référentiels", href: "/referentiels", icone: Library },
 ];
 

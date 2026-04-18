@@ -28,6 +28,12 @@ export async function supprimerProjet(_id: string): Promise<ActionResult> {
   return { ok: false, message: DEMO_ERREUR };
 }
 
+export async function dupliquerProjet(
+  _id: string,
+): Promise<ActionResult<{ id: string }>> {
+  return { ok: false, message: DEMO_ERREUR };
+}
+
 export async function modifierEtape(_input: {
   etapeId: string;
   statut: "non_commence" | "en_cours" | "termine" | "bloque";

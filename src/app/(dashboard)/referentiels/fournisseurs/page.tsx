@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { listerFournisseursRef } from "@/lib/queries/referentiels";
 import { EditeurFournisseurs } from "./_Editeur";
+export const dynamic = "force-dynamic";
+
 
 export default async function FournisseursPage() {
   const fournisseurs = await listerFournisseursRef();

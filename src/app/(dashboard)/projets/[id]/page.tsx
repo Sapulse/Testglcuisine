@@ -14,6 +14,9 @@ import { listerFournisseurs } from "@/lib/queries/commandes";
 import { listerPoseurs } from "@/lib/queries/projets";
 import { cn } from "@/lib/utils";
 import { PROJETS } from "@/lib/data/snapshot";
+import { BoutonDupliquer } from "./_BoutonDupliquer";
+export const dynamic = "force-dynamic";
+
 
 export async function generateStaticParams() {
   return PROJETS.map((p) => ({ id: p.id }));
@@ -67,13 +70,16 @@ export default async function FicheProjetPage({
             {projet.client.prenom} {projet.client.nom}
           </h1>
           <BadgeStatut statut={projet.statutGlobal} />
-          <Link
-            href={`/projets/${projet.id}/fiche`}
-            className="ml-auto inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <FileDown className="h-4 w-4" />
-            Fiche PDF
-          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <BoutonDupliquer projetId={projet.id} />
+            <Link
+              href={`/projets/${projet.id}/fiche`}
+              className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <FileDown className="h-4 w-4" />
+              Fiche PDF
+            </Link>
+          </div>
         </div>
         <div className="flex gap-4 text-xs text-slate-600">
           <span>{LIBELLES_TYPE_PROJET[projet.typeProjet]}</span>
