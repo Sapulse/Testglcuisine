@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +17,7 @@ import {
   CATEGORIES_COMMANDE,
   LIBELLES_CATEGORIE,
 } from "@/lib/validations/commande";
-import { creerSav } from "../_actions";
+import { creerSav } from "@/app/(dashboard)/sav/_actions";
 
 interface Option {
   id: string;
@@ -27,13 +27,13 @@ interface Option {
 export function FormulaireSav({
   projets,
   fournisseurs,
-  projetIdInitial,
 }: {
   projets: Option[];
   fournisseurs: Option[];
-  projetIdInitial?: string;
 }) {
   const router = useRouter();
+  const params = useSearchParams();
+  const projetIdInitial = params.get("projet") ?? "";
   const [erreurServeur, setErreurServeur] = useState<string | null>(null);
 
   const {
@@ -43,7 +43,7 @@ export function FormulaireSav({
   } = useForm<SavInput>({
     resolver: zodResolver(savSchema),
     defaultValues: {
-      projetId: projetIdInitial ?? "",
+      projetId: projetIdInitial,
       fournisseurId: "",
       typeProbleme: "",
       statut: "ouvert",

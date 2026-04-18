@@ -4,7 +4,6 @@ import { chargerDashboard } from "@/lib/queries/dashboard";
 import { LIBELLES_CATEGORIE } from "@/lib/validations/commande";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const data = await chargerDashboard();

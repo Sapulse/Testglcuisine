@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import * as S from "@/lib/data/snapshot";
 
 export interface FiltresCommandes {
   fournisseurId?: string;
@@ -18,10 +19,38 @@ const INCLUDE = {
 
 export type CommandeAvecRelations = Prisma.CommandeGetPayload<{ include: typeof INCLUDE }>;
 
-/** Liste transverse des commandes avec filtres. */
 export async function listerCommandesTransverse(
   filtres: FiltresCommandes = {},
 ): Promise<CommandeAvecRelations[]> {
+  if (S.estModeStatique()) {
+    let cmds = S.COMMANDES.map((c) => {
+      const projet = S.PROJETS.find((p) => p.id === c.projetId)!;
+      const client = S.CLIENTS.find((cl) => cl.id === projet.clientId)!;
+      const fournisseur = S.FOURNISSEURS.find((f) => f.id === c.fournisseurId)!;
+      return { ...c, fournisseur, projet: { ...projet, client } } as unknown as CommandeAvecRelations;
+    });
+    if (filtres.fournisseurId)
+      cmds = cmds.filter((c) => c.fournisseurId === filtres.fournisseurId);
+    if (filtres.categorie)
+      cmds = cmds.filter((c) => c.categorie === filtres.categorie);
+    if (filtres.statutCommande)
+      cmds = cmds.filter((c) => c.statutCommande === filtres.statutCommande);
+    if (filtres.statutLivraison)
+      cmds = cmds.filter((c) => c.statutLivraison === filtres.statutLivraison);
+    if (filtres.semaine)
+      cmds = cmds.filter((c) => c.semaineLivraisonPrevue === filtres.semaine);
+    if (filtres.recherche) {
+      const r = filtres.recherche.toLowerCase();
+      cmds = cmds.filter(
+        (c) =>
+          c.projet.reference.toLowerCase().includes(r) ||
+          c.projet.client.nom.toLowerCase().includes(r) ||
+          c.fournisseur.nom.toLowerCase().includes(r),
+      );
+    }
+    return cmds;
+  }
+
   const where: Prisma.CommandeWhereInput = {};
   if (filtres.fournisseurId) where.fournisseurId = filtres.fournisseurId;
   if (filtres.categorie) where.categorie = filtres.categorie as Prisma.CommandeWhereInput["categorie"];
@@ -50,5 +79,8 @@ export async function listerCommandesTransverse(
 }
 
 export async function listerFournisseurs() {
+  if (S.estModeStatique()) {
+    return [...S.FOURNISSEURS].sort((a, b) => a.nom.localeCompare(b.nom));
+  }
   return prisma.fournisseur.findMany({ orderBy: [{ nom: "asc" }] });
 }

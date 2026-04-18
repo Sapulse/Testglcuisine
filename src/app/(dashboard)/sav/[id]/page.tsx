@@ -9,8 +9,11 @@ import {
 import { LIBELLES_CATEGORIE } from "@/lib/validations/commande";
 import { cn } from "@/lib/utils";
 import { EditeurSav, FormulaireJournal } from "./_Editeur";
+import { SAVS } from "@/lib/data/snapshot";
 
-export const dynamic = "force-dynamic";
+export async function generateStaticParams() {
+  return SAVS.map((s) => ({ id: s.id }));
+}
 
 export default async function SavDetailPage({
   params,

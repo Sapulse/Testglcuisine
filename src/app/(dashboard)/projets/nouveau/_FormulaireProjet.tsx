@@ -12,7 +12,7 @@ import {
   LIBELLES_TYPE_PROJET,
   type ProjetInput,
 } from "@/lib/validations/projet";
-import { creerProjet } from "../_actions";
+import { creerProjet } from "@/app/(dashboard)/projets/_actions";
 import { useState } from "react";
 
 interface Option {

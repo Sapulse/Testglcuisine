@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { listerPoseursRef } from "@/lib/queries/referentiels";
 import { EditeurPoseurs } from "./_Editeur";
 
-export const dynamic = "force-dynamic";
-
 export default async function PoseursPage() {
-  const poseurs = await prisma.poseur.findMany({
-    orderBy: [{ nom: "asc" }, { prenom: "asc" }],
-  });
+  const poseurs = await listerPoseursRef();
 
   return (
     <div className="flex flex-col gap-4 p-4">
