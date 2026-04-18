@@ -17,8 +17,11 @@ import { calculerAlertes } from "@/lib/metier/alertes";
 import { joursAvantSemaine } from "@/lib/metier/semaines";
 import { BoutonImpression } from "./_BoutonImpression";
 import { cn } from "@/lib/utils";
+import { PROJETS } from "@/lib/data/snapshot";
 
-export const dynamic = "force-dynamic";
+export async function generateStaticParams() {
+  return PROJETS.map((p) => ({ id: p.id }));
+}
 
 const LIBELLES_STATUT_ETAPE = {
   non_commence: "Non commencé",

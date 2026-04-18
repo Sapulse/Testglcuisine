@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { listerVendeursRef } from "@/lib/queries/referentiels";
 import { EditeurVendeurs } from "./_Editeur";
 
-export const dynamic = "force-dynamic";
-
 export default async function VendeursPage() {
-  const vendeurs = await prisma.vendeur.findMany({
-    orderBy: [{ nom: "asc" }, { prenom: "asc" }],
-  });
+  const vendeurs = await listerVendeursRef();
 
   return (
     <div className="flex flex-col gap-4 p-4">

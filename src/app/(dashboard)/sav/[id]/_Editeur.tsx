@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ajouterAuJournal, modifierSav, supprimerSav } from "../_actions";
+import {
+  ajouterAuJournal,
+  modifierSav,
+  supprimerSav,
+} from "@/app/(dashboard)/sav/_actions";
 import type { StatutSAV } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

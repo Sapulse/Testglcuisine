@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/metier/Sidebar";
+import { BannereDemo } from "@/components/metier/BannereDemo";
 
 /** Layout : sidebar à gauche (desktop) / barre du haut (mobile). */
 export default function DashboardLayout({
@@ -7,7 +8,10 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar />
-      <main className="flex-1 overflow-x-auto bg-white">{children}</main>
+      <main className="flex-1 overflow-x-auto bg-white">
+        <BannereDemo />
+        {children}
+      </main>
     </div>
   );
 }

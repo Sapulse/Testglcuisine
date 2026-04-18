@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import type { StatutEtape } from "@prisma/client";
 import { cn } from "@/lib/utils";
-import { modifierEtape } from "../_actions";
+import { modifierEtape } from "@/app/(dashboard)/projets/_actions";
 
 interface Etape {
   id: string;

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { calculerAlertes, type Alerte } from "@/lib/metier/alertes";
 import { calculerStatutGlobal, type StatutGlobalProjet } from "@/lib/metier/statuts";
 import { semaineActuelle, anneeActuelle } from "@/lib/metier/semaines";
+import * as S from "@/lib/data/snapshot";
 
 export interface AlerteAffichee extends Alerte {
   projetId: string;
@@ -44,8 +45,37 @@ export interface SavResumeDashboard {
   bloquant: boolean;
 }
 
-/** Charge tous les projets et leurs relations pour le dashboard (1 requête). */
+const JOUR_MS = 86_400_000;
+
+/** Date de référence : mode statique → fixée à avril 2026 (cohérence démo). */
+function maintenantDemo(): Date {
+  return S.estModeStatique()
+    ? new Date("2026-04-18T12:00:00Z")
+    : new Date();
+}
+
 async function projetsAvecDetails() {
+  if (S.estModeStatique()) {
+    return S.PROJETS.map((p) => {
+      const client = S.CLIENTS.find((c) => c.id === p.clientId)!;
+      return {
+        ...p,
+        client,
+        etapes: S.ETAPES.filter((e) => e.projetId === p.id).sort(
+          (a, b) => a.numero - b.numero,
+        ),
+        commandes: S.COMMANDES.filter((c) => c.projetId === p.id).map((c) => ({
+          ...c,
+          fournisseur: S.FOURNISSEURS.find((f) => f.id === c.fournisseurId)!,
+        })),
+        sav: S.SAVS.filter((s) => s.projetId === p.id),
+        assignations: S.ASSIGNATIONS.filter((a) => a.projetId === p.id).map((a) => ({
+          ...a,
+          poseur: S.POSEURS.find((po) => po.id === a.poseurId)!,
+        })),
+      };
+    });
+  }
   return prisma.projet.findMany({
     include: {
       client: true,
@@ -58,9 +88,24 @@ async function projetsAvecDetails() {
   });
 }
 
-const JOUR_MS = 86_400_000;
+async function savsOuverts() {
+  if (S.estModeStatique()) {
+    return S.SAVS.filter((s) => s.statut !== "resolu" && s.statut !== "clos")
+      .map((s) => {
+        const projet = S.PROJETS.find((p) => p.id === s.projetId)!;
+        const client = S.CLIENTS.find((c) => c.id === projet.clientId)!;
+        return { ...s, projet: { ...projet, client } };
+      })
+      .sort((a, b) => a.dateOuverture.getTime() - b.dateOuverture.getTime());
+  }
+  return prisma.sAV.findMany({
+    where: { statut: { notIn: ["resolu", "clos"] } },
+    include: { projet: { include: { client: true } } },
+    orderBy: { dateOuverture: "asc" },
+  });
+}
 
-export async function chargerDashboard(maintenant: Date = new Date()) {
+export async function chargerDashboard(maintenant: Date = maintenantDemo()) {
   const semaine = semaineActuelle(maintenant);
   const annee = anneeActuelle(maintenant);
   const projets = await projetsAvecDetails();
@@ -96,17 +141,13 @@ export async function chargerDashboard(maintenant: Date = new Date()) {
       client: `${p.client.prenom} ${p.client.nom}`,
       ville: p.villeChantier,
       semainePose: p.semainePose,
-      poseurs:
-        p.assignations.map((a) => a.poseur.prenom).join(" / ") || "—",
+      poseurs: p.assignations.map((a) => a.poseur.prenom).join(" / ") || "—",
       statut,
     };
 
-    if (p.semainePose === semaine && p.anneePose === annee) {
-      cetteSemaine.push(resume);
-    }
-    if (statut === "a_risque" || statut === "vigilance" || statut === "bloque") {
+    if (p.semainePose === semaine && p.anneePose === annee) cetteSemaine.push(resume);
+    if (statut === "a_risque" || statut === "vigilance" || statut === "bloque")
       aRisque.push(resume);
-    }
 
     const alertesProjet = calculerAlertes(
       {
@@ -167,12 +208,7 @@ export async function chargerDashboard(maintenant: Date = new Date()) {
     }
   }
 
-  // SAV ouverts (hors resolu/clos), triés par ancienneté.
-  const savDb = await prisma.sAV.findMany({
-    where: { statut: { notIn: ["resolu", "clos"] } },
-    include: { projet: { include: { client: true } } },
-    orderBy: { dateOuverture: "asc" },
-  });
+  const savDb = await savsOuverts();
   const savOuverts: SavResumeDashboard[] = savDb.map((s) => ({
     id: s.id,
     projetId: s.projetId,
@@ -183,7 +219,6 @@ export async function chargerDashboard(maintenant: Date = new Date()) {
     bloquant: s.bloquant,
   }));
 
-  // Tri des alertes : rouge > orange > jaune.
   alertes.sort((a, b) => {
     const ordre: Record<string, number> = { rouge: 0, orange: 1, jaune: 2 };
     return ordre[a.niveau] - ordre[b.niveau];

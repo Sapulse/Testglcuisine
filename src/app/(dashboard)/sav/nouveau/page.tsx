@@ -1,22 +1,13 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { projetsAvecClient, listerFournisseursRef } from "@/lib/queries/referentiels";
 import { FormulaireSav } from "./_Formulaire";
 
-export const dynamic = "force-dynamic";
-
-interface PageProps {
-  searchParams: Promise<{ projet?: string }>;
-}
-
-export default async function NouveauSavPage({ searchParams }: PageProps) {
-  const sp = await searchParams;
+export default async function NouveauSavPage() {
   const [projets, fournisseurs] = await Promise.all([
-    prisma.projet.findMany({
-      include: { client: true },
-      orderBy: [{ anneePose: "desc" }, { reference: "asc" }],
-    }),
-    prisma.fournisseur.findMany({ orderBy: [{ nom: "asc" }] }),
+    projetsAvecClient(),
+    listerFournisseursRef(),
   ]);
 
   return (
@@ -30,14 +21,15 @@ export default async function NouveauSavPage({ searchParams }: PageProps) {
         </Link>
         <h1 className="text-xl font-semibold text-slate-900">Nouveau ticket SAV</h1>
       </header>
-      <FormulaireSav
-        projets={projets.map((p) => ({
-          id: p.id,
-          label: `${p.reference} · ${p.client.prenom} ${p.client.nom}`,
-        }))}
-        fournisseurs={fournisseurs.map((f) => ({ id: f.id, label: f.nom }))}
-        projetIdInitial={sp.projet}
-      />
+      <Suspense>
+        <FormulaireSav
+          projets={projets.map((p) => ({
+            id: p.id,
+            label: `${p.reference} · ${p.client.prenom} ${p.client.nom}`,
+          }))}
+          fournisseurs={fournisseurs.map((f) => ({ id: f.id, label: f.nom }))}
+        />
+      </Suspense>
     </div>
   );
 }

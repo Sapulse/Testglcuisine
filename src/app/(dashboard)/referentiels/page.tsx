@@ -1,25 +1,19 @@
 import Link from "next/link";
 import { Building2, HardHat, UserRound } from "lucide-react";
-import { prisma } from "@/lib/prisma";
-
-export const dynamic = "force-dynamic";
+import { comptesReferentiels } from "@/lib/queries/referentiels";
 
 export default async function ReferentielsPage() {
-  const [nbFournisseurs, nbPoseurs, nbVendeurs] = await Promise.all([
-    prisma.fournisseur.count(),
-    prisma.poseur.count(),
-    prisma.vendeur.count(),
-  ]);
+  const { fournisseurs, poseurs, vendeurs } = await comptesReferentiels();
 
   const entrees = [
     {
       href: "/referentiels/fournisseurs",
       titre: "Fournisseurs",
-      nb: nbFournisseurs,
+      nb: fournisseurs,
       icone: Building2,
     },
-    { href: "/referentiels/poseurs", titre: "Poseurs", nb: nbPoseurs, icone: HardHat },
-    { href: "/referentiels/vendeurs", titre: "Vendeurs", nb: nbVendeurs, icone: UserRound },
+    { href: "/referentiels/poseurs", titre: "Poseurs", nb: poseurs, icone: HardHat },
+    { href: "/referentiels/vendeurs", titre: "Vendeurs", nb: vendeurs, icone: UserRound },
   ];
 
   return (

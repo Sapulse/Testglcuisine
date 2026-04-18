@@ -4,7 +4,6 @@ import { listerClients, listerVendeurs } from "@/lib/queries/projets";
 import { anneeActuelle, semaineActuelle } from "@/lib/metier/semaines";
 import { FormulaireProjet } from "./_FormulaireProjet";
 
-export const dynamic = "force-dynamic";
 
 export default async function NouveauProjetPage() {
   const [clients, vendeurs] = await Promise.all([
