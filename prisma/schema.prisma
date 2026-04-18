@@ -1,0 +1,11 @@
+// Schéma Prisma — stub Sprint 0.
+// Le modèle complet (Client, Projet, Commande, SAV…) sera défini au Sprint 1.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
