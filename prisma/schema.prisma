@@ -1,5 +1,6 @@
-// Schéma Prisma — stub Sprint 0.
-// Le modèle complet (Client, Projet, Commande, SAV…) sera défini au Sprint 1.
+// Schéma Prisma — GL Cuisines
+// Conventions : tables et champs en français PascalCase, enums en snake_case,
+// timestamps createdAt / updatedAt systématiques.
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +9,239 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum StatutEtape {
+  non_commence
+  en_cours
+  termine
+  bloque
+}
+
+enum CategorieCommande {
+  electromenagers
+  meubles
+  accessoires
+  plan_travail
+  credence
+  fond_hotte
+  sanitaires
+}
+
+enum StatutCommande {
+  non_envoye
+  envoye
+  confirme
+  expedie
+  livre
+  reliquat
+}
+
+enum StatutLivraison {
+  en_attente
+  livre
+  partiel
+  retard
+}
+
+enum StatutSAV {
+  ouvert
+  en_attente_fournisseur
+  planifie
+  resolu
+  clos
+}
+
+enum TypeProjet {
+  cuisine
+  dressing
+  salle_de_bain
+  meuble_tv
+  bibliotheque
+  agencement_divers
+}
+
+enum RoleAssignation {
+  principal
+  secondaire
+}
+
+enum TypeJournalSAV {
+  creation
+  changement_statut
+  intervention
+  note
+  cloture
+}
+
+// ──────────────────────────── Entités ────────────────────────────
+
+model Client {
+  id        String   @id @default(cuid())
+  nom       String
+  prenom    String
+  telephone String
+  email     String?
+  adresse   String
+  codePostal String
+  ville     String
+  projets   Projet[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Projet {
+  id               String   @id @default(cuid())
+  reference        String   @unique // ex. "2026-042"
+  clientId         String
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  vendeurId        String?
+  vendeur          Vendeur? @relation(fields: [vendeurId], references: [id], onDelete: SetNull)
+  typeProjet       TypeProjet
+  adresseChantier  String
+  codePostalChantier String
+  villeChantier    String
+  montantHT        Float?
+  montantTTC       Float?
+  semainePose      String   // "S16" etc.
+  anneePose        Int      // 2026
+  estRenovation    Boolean  @default(false)
+  dateCreation     DateTime @default(now())
+  dateSignature    DateTime?
+
+  etapes           EtapeProjet[]
+  commandes        Commande[]
+  sav              SAV[]
+  assignations     AssignationPoseur[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([semainePose, anneePose])
+  @@index([clientId])
+}
+
+model EtapeProjet {
+  id          String      @id @default(cuid())
+  projetId    String
+  projet      Projet      @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  numero      Int         // 1 à 9
+  nom         String
+  statut      StatutEtape @default(non_commence)
+  dateFin     DateTime?
+  commentaire String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([projetId, numero])
+  @@index([projetId])
+}
+
+model Fournisseur {
+  id         String     @id @default(cuid())
+  nom        String
+  contact    String?
+  telephone  String?
+  email      String?
+  categories CategorieCommande[]
+  commandes  Commande[]
+  sav        SAV[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Commande {
+  id                     String            @id @default(cuid())
+  projetId               String
+  projet                 Projet            @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  fournisseurId          String
+  fournisseur            Fournisseur       @relation(fields: [fournisseurId], references: [id], onDelete: Restrict)
+  categorie              CategorieCommande
+  statutCommande         StatutCommande    @default(non_envoye)
+  semaineLivraisonPrevue String? // "S14" etc.
+  statutLivraison        StatutLivraison   @default(en_attente)
+  essentielle            Boolean           @default(true)
+  remarque               String?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  @@index([projetId])
+  @@index([fournisseurId])
+  @@index([categorie])
+}
+
+model Poseur {
+  id           String              @id @default(cuid())
+  nom          String
+  prenom       String
+  telephone    String?
+  interne      Boolean             @default(true)
+  assignations AssignationPoseur[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model Vendeur {
+  id        String   @id @default(cuid())
+  nom       String
+  prenom    String
+  telephone String?
+  email     String?
+  projets   Projet[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AssignationPoseur {
+  id        String          @id @default(cuid())
+  projetId  String
+  projet    Projet          @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  poseurId  String
+  poseur    Poseur          @relation(fields: [poseurId], references: [id], onDelete: Restrict)
+  semaine   String          // "S16"
+  annee     Int
+  role      RoleAssignation @default(principal)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([projetId, poseurId, semaine, annee])
+  @@index([projetId])
+  @@index([poseurId])
+}
+
+model SAV {
+  id               String       @id @default(cuid())
+  projetId         String
+  projet           Projet       @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  fournisseurId    String?
+  fournisseur      Fournisseur? @relation(fields: [fournisseurId], references: [id], onDelete: SetNull)
+  categorie        CategorieCommande?
+  typeProbleme     String
+  statut           StatutSAV    @default(ouvert)
+  bloquant         Boolean      @default(false)
+  dateOuverture    DateTime     @default(now())
+  dateIntervention DateTime?
+  dateCloture      DateTime?
+  commentaire      String?
+  journal          SAVJournal[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([projetId])
+  @@index([statut])
+}
+
+model SAVJournal {
+  id          String         @id @default(cuid())
+  savId       String
+  sav         SAV            @relation(fields: [savId], references: [id], onDelete: Cascade)
+  type        TypeJournalSAV
+  auteur      String?
+  commentaire String
+  horodatage  DateTime       @default(now())
+  createdAt   DateTime       @default(now())
+
+  @@index([savId])
 }
