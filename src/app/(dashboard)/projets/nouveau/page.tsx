@@ -3,6 +3,8 @@ import { ChevronLeft } from "lucide-react";
 import { listerClients, listerVendeurs } from "@/lib/queries/projets";
 import { anneeActuelle, semaineActuelle } from "@/lib/metier/semaines";
 import { FormulaireProjet } from "./_FormulaireProjet";
+export const dynamic = "force-dynamic";
+
 
 
 export default async function NouveauProjetPage() {

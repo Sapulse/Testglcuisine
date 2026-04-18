@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { listerSav } from "@/lib/queries/sav";
 import { SavListeClient } from "./_SavListeClient";
+export const dynamic = "force-dynamic";
+
 
 export default async function SAVPage() {
   const savs = await listerSav({});

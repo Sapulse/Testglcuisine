@@ -5,6 +5,7 @@ import {
   listerVendeurs,
 } from "@/lib/queries/projets";
 import { ProjetsListeClient } from "./_ProjetsListeClient";
+export const dynamic = "force-dynamic";
 
 export default async function ProjetsPage() {
   const [projets, poseurs, vendeurs] = await Promise.all([

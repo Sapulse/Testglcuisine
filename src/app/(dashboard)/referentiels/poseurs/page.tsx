@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { listerPoseursRef } from "@/lib/queries/referentiels";
 import { EditeurPoseurs } from "./_Editeur";
+export const dynamic = "force-dynamic";
+
 
 export default async function PoseursPage() {
   const poseurs = await listerPoseursRef();

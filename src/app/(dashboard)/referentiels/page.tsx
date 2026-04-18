@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Building2, HardHat, UserRound } from "lucide-react";
 import { comptesReferentiels } from "@/lib/queries/referentiels";
+export const dynamic = "force-dynamic";
+
 
 export default async function ReferentielsPage() {
   const { fournisseurs, poseurs, vendeurs } = await comptesReferentiels();

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { listerVendeursRef } from "@/lib/queries/referentiels";
 import { EditeurVendeurs } from "./_Editeur";
+export const dynamic = "force-dynamic";
+
 
 export default async function VendeursPage() {
   const vendeurs = await listerVendeursRef();
