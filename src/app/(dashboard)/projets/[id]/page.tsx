@@ -177,6 +177,15 @@ export default async function FicheProjetPage({
 
         {/* ─── SAV ─── */}
         <TabsContent value="sav">
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-end">
+              <Link
+                href={`/sav/nouveau?projet=${projet.id}`}
+                className="inline-flex h-8 items-center gap-1 rounded-md bg-slate-900 px-3 text-xs font-medium text-white hover:bg-slate-800"
+              >
+                + Nouveau ticket
+              </Link>
+            </div>
           {projet.sav.length === 0 ? (
             <p className="text-sm text-slate-500">Aucun ticket SAV.</p>
           ) : (
@@ -187,7 +196,12 @@ export default async function FicheProjetPage({
                   className="rounded-md border border-slate-200 bg-white p-3"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{s.typeProbleme}</span>
+                    <Link
+                      href={`/sav/${s.id}`}
+                      className="font-semibold hover:underline"
+                    >
+                      {s.typeProbleme}
+                    </Link>
                     {s.bloquant && (
                       <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-700">
                         bloquant
@@ -208,6 +222,7 @@ export default async function FicheProjetPage({
               ))}
             </ul>
           )}
+          </div>
         </TabsContent>
 
         {/* ─── Alertes ─── */}
