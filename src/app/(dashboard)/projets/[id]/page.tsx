@@ -9,7 +9,9 @@ import { calculerAlertes } from "@/lib/metier/alertes";
 import { joursAvantSemaine } from "@/lib/metier/semaines";
 import { WorkflowInline } from "./_WorkflowInline";
 import { TableauCommandesProjet } from "@/components/metier/TableauCommandesProjet";
+import { AssignationsPoseurs } from "@/components/metier/AssignationsPoseurs";
 import { listerFournisseurs } from "@/lib/queries/commandes";
+import { listerPoseurs } from "@/lib/queries/projets";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +22,10 @@ export default async function FicheProjetPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [projet, fournisseurs] = await Promise.all([
+  const [projet, fournisseurs, poseurs] = await Promise.all([
     getProjetById(id),
     listerFournisseurs(),
+    listerPoseurs(),
   ]);
   if (!projet) notFound();
 
@@ -153,27 +156,23 @@ export default async function FicheProjetPage({
 
         {/* ─── Planning ─── */}
         <TabsContent value="planning">
-          <Bloc titre="Assignations poseurs">
-            {projet.assignations.length === 0 ? (
-              <p className="text-sm text-slate-500">Aucun poseur assigné.</p>
-            ) : (
-              <ul className="flex flex-col gap-1 text-sm">
-                {projet.assignations.map((a) => (
-                  <li key={a.id} className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-slate-500">
-                      {a.semaine} · {a.annee}
-                    </span>
-                    <span>
-                      {a.poseur.prenom} {a.poseur.nom}
-                    </span>
-                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase text-slate-600">
-                      {a.role}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Bloc>
+          <AssignationsPoseurs
+            projetId={projet.id}
+            assignations={projet.assignations.map((a) => ({
+              id: a.id,
+              poseurId: a.poseurId,
+              poseurNom: `${a.poseur.prenom} ${a.poseur.nom}`,
+              semaine: a.semaine,
+              annee: a.annee,
+              role: a.role,
+            }))}
+            poseurs={poseurs.map((p) => ({
+              id: p.id,
+              nom: `${p.prenom} ${p.nom}`,
+            }))}
+            semaineDefaut={projet.semainePose}
+            anneeDefaut={projet.anneePose}
+          />
         </TabsContent>
 
         {/* ─── SAV ─── */}
