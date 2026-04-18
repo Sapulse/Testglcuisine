@@ -45,3 +45,27 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* Styles impression (fiche chantier PDF) */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body {
+    background: #fff !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-hide {
+    display: none !important;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .print-avoid-break {
+    break-inside: avoid;
+  }
+}

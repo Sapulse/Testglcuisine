@@ -1,42 +1,62 @@
 # GL Cuisines — Pilotage chantier
 
-Application web de pilotage chantier pour **GL Cuisines** (PME artisanale de cuisines et agencement à Brest).
+Application web de **pilotage chantier** pour GL Cuisines (PME artisanale de cuisines et agencement à Brest). Remplace leur Google Sheets actuel par un outil orienté terrain : répondre en 3 secondes à « ce chantier est-il prêt à poser, qu'est-ce qui bloque, quelles commandes sont en retard ».
 
-> Répondre en 3 secondes à : « Ce chantier est-il prêt à poser ? Qu'est-ce qui bloque ? Quelles commandes sont en retard ? »
+> Voir [`CLAUDE.md`](./CLAUDE.md) pour la philosophie produit et [`docs/cahier-des-charges.md`](./docs/cahier-des-charges.md) pour les specs détaillées.
 
-Voir [`CLAUDE.md`](./CLAUDE.md) pour la philosophie projet et [`docs/cahier-des-charges.md`](./docs/cahier-des-charges.md) pour les specs détaillées.
+---
+
+## ✨ Fonctionnalités
+
+| Module | Contenu |
+|---|---|
+| **Dashboard dirigeant** | 6 blocs live (alertes, cette semaine, à risque, commandes non envoyées, livraisons critiques, SAV ouverts) |
+| **Projets** | Liste filtrée, fiche 6 onglets (Infos, Workflow 9 étapes, Commandes, Planning, SAV, Alertes), création RHF+Zod, workflow éditable inline |
+| **Commandes** | 7 catégories, CRUD sur fiche projet, vue transverse multi-projets avec 6 filtres |
+| **Planning** | Vue horizontale S01–S52, semaine courante surlignée, cartes colorées par statut |
+| **SAV** | Tickets rattachés projet, journal chronologique, 5 statuts, flag bloquant |
+| **Référentiels** | Fournisseurs, Poseurs, Vendeurs — CRUD éditables inline |
+| **Fiche PDF** | Export A4 imprimable d'une fiche chantier complète |
+
+### Règles métier automatiques
+
+- **Statut global chantier** (7 cas, premier match gagne) : Terminé · À facturer · Bloqué · À risque · Vigilance · Prêt · En cours
+- **7 règles d'alertes** (A1–A7) calculées à la volée depuis la semaine de pose, l'état des étapes et des commandes
 
 ---
 
 ## 🏗️ Stack
 
-- **Next.js 15** (App Router) + **TypeScript strict**
-- **Prisma** + **PostgreSQL**
+- **Next.js 15+** (App Router) + **TypeScript strict**
+- **Prisma 6** + **PostgreSQL**
 - **Tailwind CSS** + **shadcn/ui** (thème slate)
 - **react-hook-form** + **Zod**
-- **Vitest**
+- **Vitest** (47 tests sur la logique métier)
 
 ---
 
 ## 🚀 Démarrage local
 
 ```bash
-# 1. installer les dépendances
+# 1. Cloner puis installer
 npm install
 
-# 2. configurer la base
+# 2. Configurer la base de données
 cp .env.example .env
-# puis renseigner DATABASE_URL
+# puis renseigner DATABASE_URL (Postgres local ou hébergé)
 
-# 3. générer le client Prisma + pousser le schéma
+# 3. Créer le schéma + charger les données de démo
 npm run db:generate
 npm run db:push
+npm run db:seed
 
-# 4. lancer le dev server
+# 4. Lancer le serveur de développement
 npm run dev
 ```
 
 L'application tourne sur [http://localhost:3000](http://localhost:3000).
+
+Le seed crée 3 projets scénarisés (Durand à risque, Tanguy vigilance + SAV bloquant, Kerleau cette semaine), 5 fournisseurs, 2 poseurs, 1 vendeur.
 
 ---
 
@@ -44,18 +64,37 @@ L'application tourne sur [http://localhost:3000](http://localhost:3000).
 
 ```
 src/
-  app/(dashboard)/    # pages applicatives
-  app/page.tsx        # accueil public
-  app/layout.tsx      # layout racine
-  components/ui/      # primitives shadcn
-  components/metier/  # composants métier réutilisables
-  lib/metier/         # logique pure : semaines, statuts, alertes
-  lib/prisma.ts       # client Prisma singleton
-  types/              # types partagés
+  app/
+    (dashboard)/
+      page.tsx                    # dashboard dirigeant
+      layout.tsx                  # sidebar + contenu
+      projets/
+        page.tsx                  # liste filtrée
+        nouveau/                  # formulaire création
+        [id]/
+          page.tsx                # fiche 6 onglets
+          fiche/                  # version imprimable / PDF
+      commandes/                  # vue transverse
+      planning/                   # S01–S52
+      sav/                        # tickets + journal
+      referentiels/
+        fournisseurs/
+        poseurs/
+        vendeurs/
+  components/
+    ui/                           # primitives shadcn (Button, Input, Tabs…)
+    metier/                       # Sidebar, BadgeStatut, tableaux CRUD…
+  lib/
+    metier/                       # logique pure : semaines, statuts, alertes
+    queries/                      # lecture DB (projets, commandes, sav, dashboard)
+    validations/                  # schemas Zod
+    prisma.ts                     # client Prisma singleton
 prisma/
-  schema.prisma       # schéma base de données
+  schema.prisma                   # 10 tables, 9 enums
+  seed.ts                         # données de démo
 docs/
   cahier-des-charges.md
+  deploiement.md
 ```
 
 ---
@@ -64,25 +103,62 @@ docs/
 
 | Commande | Rôle |
 |---|---|
-| `npm run dev` | Next.js dev server |
-| `npm run build` | Build production |
+| `npm run dev` | Serveur Next.js en dev (HMR) |
+| `npm run build` | Build de production |
 | `npm run start` | Lance le build |
 | `npm run lint` | ESLint |
-| `npm run test` | Vitest (logique métier) |
+| `npm run test` | Vitest (47 tests métier) |
+| `npm run test:watch` | Vitest en mode watch |
 | `npm run db:push` | Pousse le schéma Prisma en base |
 | `npm run db:generate` | Régénère le client Prisma |
-| `npm run db:seed` | Seed de données de démo |
+| `npm run db:seed` | Charge les données de démo |
 
 ---
 
-## 📋 État du projet
+## 🧠 Règles de code
 
-Développement par **sprints**. Sprint courant : voir dernier commit.
+- **TypeScript strict** — zéro `any`.
+- **Entités métier en français** (`Projet`, `Commande`), **code technique en anglais** (`getProjetById`, `calculerStatutGlobal`).
+- **Server components par défaut**, `"use client"` uniquement où nécessaire.
+- **Zod** pour toute validation (formulaires + Server Actions).
+- Une fonction = une responsabilité (**< 50 lignes**).
+- Commentaires métier en français.
 
-- [x] Sprint 0 — Setup
-- [ ] Sprint 1 — Fondations métier (schéma + logique)
-- [ ] Sprint 2 — Module Projets
-- [ ] Sprint 3 — Module Commandes
-- [ ] Sprint 4 — Planning + Référentiels
-- [ ] Sprint 5 — SAV + Dashboard réel
-- [ ] Sprint 6 — Finition (responsive, PDF, docs)
+---
+
+## 🧾 Export PDF
+
+Sur une fiche projet, clique sur **« Fiche PDF »** → ouvre une version A4 optimisée impression. Utilise `Ctrl+P` / `Cmd+P` puis **« Enregistrer au format PDF »** dans Chrome ou Safari.
+
+---
+
+## 📱 Responsive
+
+- **Desktop / tablette ≥ 768 px** : sidebar permanente à gauche.
+- **Mobile < 768 px** : barre de navigation en haut avec menu burger, contenus en colonne unique.
+
+---
+
+## 🚢 Déploiement
+
+Voir [`docs/deploiement.md`](./docs/deploiement.md) — prêt pour **Vercel + Neon** (ou Railway, Render, Fly.io).
+
+---
+
+## 🗺️ Historique
+
+| Sprint | Contenu |
+|---|---|
+| 0 | Setup Next.js + Prisma + shadcn |
+| 1 | Schéma + seed + logique métier + 47 tests + dashboard mock |
+| 2 | Module Projets (liste, fiche 6 onglets, création, workflow inline) |
+| 3 | Module Commandes (CRUD fiche + vue transverse) |
+| 4 | Planning S01–S52 + assignations + référentiels CRUD |
+| 5 | SAV complet avec journal + dashboard sur vraies données |
+| 6 | Responsive tablette + export PDF + docs finales |
+
+---
+
+## 📄 Licence
+
+Propriétaire — GL Cuisines.

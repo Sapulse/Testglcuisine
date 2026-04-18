@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, FileDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgeStatut } from "@/components/metier/BadgeStatut";
 import { getProjetById } from "@/lib/queries/projets";
@@ -58,12 +58,19 @@ export default async function FicheProjetPage({
         >
           <ChevronLeft className="h-3 w-3" /> Retour aux projets
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-sm text-slate-500">{projet.reference}</span>
           <h1 className="text-xl font-semibold text-slate-900">
             {projet.client.prenom} {projet.client.nom}
           </h1>
           <BadgeStatut statut={projet.statutGlobal} />
+          <Link
+            href={`/projets/${projet.id}/fiche`}
+            className="ml-auto inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <FileDown className="h-4 w-4" />
+            Fiche PDF
+          </Link>
         </div>
         <div className="flex gap-4 text-xs text-slate-600">
           <span>{LIBELLES_TYPE_PROJET[projet.typeProjet]}</span>
