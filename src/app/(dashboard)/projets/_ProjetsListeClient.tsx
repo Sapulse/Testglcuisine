@@ -11,7 +11,12 @@ import {
   type StatutGlobalProjet,
 } from "@/lib/metier/statuts";
 import { LIBELLES_TYPE_PROJET } from "@/lib/validations/projet";
-import { estDemoStatique } from "@/lib/mode";
+import { useLocalStoreData } from "@/lib/data/use-local-store";
+import {
+  projetsPourListe,
+  poseursPourListe,
+  vendeursPourListe,
+} from "@/lib/data/transformers";
 import { FiltresProjets } from "./_FiltresProjets";
 
 interface Projet {
@@ -43,16 +48,40 @@ const STATUTS: Array<{ value: StatutGlobalProjet | "tous"; label: string }> = [
 ];
 
 export function ProjetsListeClient({
-  projets,
-  poseurs,
-  vendeurs,
+  projets: projetsServer,
+  poseurs: poseursServer,
+  vendeurs: vendeursServer,
 }: {
   projets: Projet[];
   poseurs: Option[];
   vendeurs: Option[];
 }) {
   const params = useSearchParams();
-  const isDemo = estDemoStatique();
+  const store = useLocalStoreData();
+
+  // En mode démo, on remplace les données serveur par celles du LocalStore.
+  const projets: Projet[] = store
+    ? projetsPourListe(store).map((p) => ({
+        id: p.id,
+        reference: p.reference,
+        clientPrenom: p.clientPrenom,
+        clientNom: p.clientNom,
+        typeProjet: p.typeProjet as keyof typeof LIBELLES_TYPE_PROJET,
+        villeChantier: p.villeChantier,
+        semainePose: p.semainePose,
+        anneePose: p.anneePose,
+        vendeurId: p.vendeurId,
+        poseurIds: p.poseurIds,
+        poseursNoms: p.poseursNoms,
+        statutGlobal: p.statutGlobal,
+      }))
+    : projetsServer;
+  const poseurs = store
+    ? poseursPourListe(store).map((p) => ({ value: p.id, label: `${p.prenom} ${p.nom}` }))
+    : poseursServer;
+  const vendeurs = store
+    ? vendeursPourListe(store).map((v) => ({ value: v.id, label: `${v.prenom} ${v.nom}` }))
+    : vendeursServer;
 
   const filtres = useMemo(
     () => ({
@@ -100,14 +129,12 @@ export function ProjetsListeClient({
               Vue grille
             </Link>
           </Button>
-          {!isDemo && (
-            <Button asChild size="sm">
-              <Link href="/projets/nouveau">
-                <Plus className="h-4 w-4" />
-                Nouveau projet
-              </Link>
-            </Button>
-          )}
+          <Button asChild size="sm">
+            <Link href="/projets/nouveau">
+              <Plus className="h-4 w-4" />
+              Nouveau projet
+            </Link>
+          </Button>
         </div>
       </header>
 

@@ -1,36 +1,76 @@
 import type { StatutCommande, StatutLivraison } from "@prisma/client";
 import type { CommandeInput, CommandeUpdateInput } from "@/lib/validations/commande";
-
-const DEMO_ERREUR = "Mode démo en lecture seule — cette action est désactivée.";
+import {
+  ajouterCommande,
+  modifierCommandeStore,
+  supprimerCommandeStore,
+} from "@/lib/data/local-store";
 
 export type ActionResult<T = undefined> =
   | { ok: true; data?: T }
   | { ok: false; message: string; erreurs?: Record<string, string[]> };
 
+function safe<T>(fn: () => T): ActionResult<T> {
+  try {
+    return { ok: true, data: fn() };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Erreur" };
+  }
+}
+
 export async function creerCommande(
-  _input: CommandeInput,
+  input: CommandeInput,
 ): Promise<ActionResult<{ id: string }>> {
-  return { ok: false, message: DEMO_ERREUR };
+  return safe(() => {
+    const c = ajouterCommande({
+      projetId: input.projetId,
+      fournisseurId: input.fournisseurId,
+      categorie: input.categorie,
+      statutCommande: input.statutCommande,
+      semaineLivraisonPrevue: input.semaineLivraisonPrevue ?? null,
+      statutLivraison: input.statutLivraison,
+      essentielle: input.essentielle,
+      remarque: input.remarque ?? null,
+    });
+    return { id: c.id };
+  });
 }
 
 export async function modifierCommande(
   _projetId: string,
-  _input: CommandeUpdateInput,
+  input: CommandeUpdateInput,
 ): Promise<ActionResult> {
-  return { ok: false, message: DEMO_ERREUR };
+  return safe(() => {
+    modifierCommandeStore(input.id, {
+      fournisseurId: input.fournisseurId,
+      categorie: input.categorie,
+      statutCommande: input.statutCommande,
+      semaineLivraisonPrevue: input.semaineLivraisonPrevue ?? null,
+      statutLivraison: input.statutLivraison,
+      essentielle: input.essentielle,
+      remarque: input.remarque ?? null,
+    });
+    return undefined;
+  });
 }
 
 export async function supprimerCommande(
   _projetId: string,
-  _id: string,
+  id: string,
 ): Promise<ActionResult> {
-  return { ok: false, message: DEMO_ERREUR };
+  return safe(() => {
+    supprimerCommandeStore(id);
+    return undefined;
+  });
 }
 
 export async function modifierStatutsCommande(
   _projetId: string,
-  _id: string,
-  _patch: { statutCommande?: StatutCommande; statutLivraison?: StatutLivraison },
+  id: string,
+  patch: { statutCommande?: StatutCommande; statutLivraison?: StatutLivraison },
 ): Promise<ActionResult> {
-  return { ok: false, message: DEMO_ERREUR };
+  return safe(() => {
+    modifierCommandeStore(id, patch);
+    return undefined;
+  });
 }

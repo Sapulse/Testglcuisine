@@ -7,6 +7,8 @@ import { Plus, Trash2, Check, X, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/metier/ConfirmDialog";
+import { useLocalStoreData } from "@/lib/data/use-local-store";
+import { poseursPourListe } from "@/lib/data/transformers";
 import {
   supprimerPoseur,
   upsertPoseur,
@@ -24,6 +26,16 @@ interface Poseur {
 export function EditeurPoseurs({ initial }: { initial: Poseur[] }) {
   const [ajout, setAjout] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const store = useLocalStoreData();
+  const poseurs: Poseur[] = store
+    ? poseursPourListe(store).map((p) => ({
+        id: p.id,
+        nom: p.nom,
+        prenom: p.prenom,
+        telephone: p.telephone,
+        interne: p.interne,
+      }))
+    : initial;
 
   return (
     <div className="flex flex-col gap-3">
@@ -46,14 +58,14 @@ export function EditeurPoseurs({ initial }: { initial: Poseur[] }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {ajout && <LigneEdit initial={null} onTermine={() => setAjout(false)} />}
-            {initial.map((p) =>
+            {poseurs.map((p) =>
               editId === p.id ? (
                 <LigneEdit key={p.id} initial={p} onTermine={() => setEditId(null)} />
               ) : (
                 <LigneLecture key={p.id} p={p} onEdit={() => setEditId(p.id)} />
               ),
             )}
-            {initial.length === 0 && !ajout && (
+            {poseurs.length === 0 && !ajout && (
               <tr>
                 <td colSpan={5} className="px-3 py-6 text-center text-sm text-slate-500">
                   Aucun poseur.

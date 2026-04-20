@@ -1,18 +1,40 @@
 import type { AssignationInput } from "@/lib/validations/assignation";
-
-const DEMO_ERREUR = "Mode démo en lecture seule — cette action est désactivée.";
+import {
+  ajouterAssignation,
+  supprimerAssignationStore,
+} from "@/lib/data/local-store";
 
 export type ActionResult<T = undefined> =
   | { ok: true; data?: T }
   | { ok: false; message: string; erreurs?: Record<string, string[]> };
 
-export async function assignerPoseur(_input: AssignationInput): Promise<ActionResult> {
-  return { ok: false, message: DEMO_ERREUR };
+function safe<T>(fn: () => T): ActionResult<T> {
+  try {
+    return { ok: true, data: fn() };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Erreur" };
+  }
+}
+
+export async function assignerPoseur(input: AssignationInput): Promise<ActionResult> {
+  return safe(() => {
+    ajouterAssignation({
+      projetId: input.projetId,
+      poseurId: input.poseurId,
+      semaine: input.semaine,
+      annee: input.annee,
+      role: input.role,
+    });
+    return undefined;
+  });
 }
 
 export async function retirerAssignation(
   _projetId: string,
-  _assignationId: string,
+  assignationId: string,
 ): Promise<ActionResult> {
-  return { ok: false, message: DEMO_ERREUR };
+  return safe(() => {
+    supprimerAssignationStore(assignationId);
+    return undefined;
+  });
 }

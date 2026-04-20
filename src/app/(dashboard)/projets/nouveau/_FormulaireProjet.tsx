@@ -14,6 +14,8 @@ import {
 } from "@/lib/validations/projet";
 import { creerProjet } from "@/app/(dashboard)/projets/_actions";
 import { toast } from "sonner";
+import { useLocalStoreData } from "@/lib/data/use-local-store";
+import { estDemoStatique } from "@/lib/mode";
 import { useState } from "react";
 
 interface Option {
@@ -50,13 +52,22 @@ function Champ({
 }
 
 export function FormulaireProjet({
-  clients,
-  vendeurs,
+  clients: clientsServer,
+  vendeurs: vendeursServer,
   anneeCourante,
   semaineCourante,
 }: FormulaireProjetProps) {
   const router = useRouter();
   const [erreurServeur, setErreurServeur] = useState<string | null>(null);
+  const store = useLocalStoreData();
+  const clients = store
+    ? [...store.clients]
+        .sort((a, b) => a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
+        .map((c) => ({ id: c.id, label: `${c.prenom} ${c.nom}` }))
+    : clientsServer;
+  const vendeurs = store
+    ? [...store.vendeurs].map((v) => ({ id: v.id, label: `${v.prenom} ${v.nom}` }))
+    : vendeursServer;
 
   const {
     register,
@@ -91,7 +102,12 @@ export function FormulaireProjet({
       return;
     }
     toast.success(`Projet ${data.reference} créé`);
-    if (res.data) router.push(`/projets/${res.data.id}`);
+    if (res.data) {
+      // En mode démo statique, les IDs créés ne sont pas dans
+      // generateStaticParams — on retourne à la liste.
+      if (estDemoStatique()) router.push("/projets");
+      else router.push(`/projets/${res.data.id}`);
+    }
   }
 
   return (
