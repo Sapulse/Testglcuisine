@@ -1,9 +1,12 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { useState, useTransition } from "react";
 import { Plus, Trash2, Check, X, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/metier/ConfirmDialog";
 import {
   supprimerFournisseur,
   upsertFournisseur,
@@ -75,11 +78,18 @@ function LigneLecture({ f, onEdit }: { f: Fournisseur; onEdit: () => void }) {
   const [err, setErr] = useState<string | null>(null);
 
   function onDelete() {
-    if (!confirm(`Supprimer ${f.nom} ?`)) return;
-    setErr(null);
-    start(async () => {
-      const res = await supprimerFournisseur(f.id);
-      if (!res.ok) setErr(res.message);
+    return new Promise<void>((resolve) => {
+      setErr(null);
+      start(async () => {
+        const res = await supprimerFournisseur(f.id);
+        if (!res.ok) {
+          setErr(res.message);
+          toast.error(res.message);
+        } else {
+          toast.success(`${f.nom} supprimé`);
+        }
+        resolve();
+      });
     });
   }
 
@@ -114,13 +124,21 @@ function LigneLecture({ f, onEdit }: { f: Fournisseur; onEdit: () => void }) {
           >
             <Pencil className="h-4 w-4" />
           </button>
-          <button
-            onClick={onDelete}
-            className="rounded p-1 text-slate-500 hover:bg-red-100 hover:text-red-700"
-            disabled={pending}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <ConfirmDialog
+            titre={`Supprimer ${f.nom} ?`}
+            description="Action irréversible. Si des commandes ou SAV y sont liés, la suppression sera refusée."
+            labelConfirmer="Supprimer"
+            variant="destructive"
+            onConfirmer={onDelete}
+            trigger={
+              <button
+                className="rounded p-1 text-slate-500 hover:bg-red-100 hover:text-red-700"
+                disabled={pending}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            }
+          />
         </div>
         {err && <div className="mt-1 text-[10px] text-red-600">{err}</div>}
       </td>
@@ -151,6 +169,11 @@ function Ligne({
 
   function onValider() {
     setErr(null);
+    if (!nom.trim()) {
+      setErr("Nom requis");
+      toast.error("Nom requis");
+      return;
+    }
     start(async () => {
       const res = await upsertFournisseur(
         {
@@ -164,8 +187,10 @@ function Ligne({
       );
       if (!res.ok) {
         setErr(res.message);
+        toast.error(res.message);
         return;
       }
+      toast.success(mode === "edit" ? "Fiche modifiée" : "Fournisseur ajouté");
       onTermine();
     });
   }

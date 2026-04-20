@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { StatutEtape } from "@prisma/client";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { modifierEtape } from "@/app/(dashboard)/projets/_actions";
 
@@ -20,6 +21,13 @@ const STATUTS: Array<{ value: StatutEtape; label: string; classe: string }> = [
   { value: "termine", label: "Terminé", classe: "bg-green-100 text-green-800" },
   { value: "bloque", label: "Bloqué", classe: "bg-red-100 text-red-800" },
 ];
+
+const LIBELLES: Record<StatutEtape, string> = {
+  non_commence: "Non commencé",
+  en_cours: "En cours",
+  termine: "Terminé",
+  bloque: "Bloqué",
+};
 
 export function WorkflowInline({
   etapes,
@@ -56,15 +64,25 @@ function LigneEtape({ etape, projetId }: { etape: Etape; projetId: string }) {
   const [pending, start] = useTransition();
 
   function changerStatut(s: StatutEtape) {
+    const ancien = statut;
     setStatut(s);
     start(async () => {
-      await modifierEtape({ etapeId: etape.id, statut: s, commentaire, projetId });
+      const res = await modifierEtape({ etapeId: etape.id, statut: s, commentaire, projetId });
+      if (!res.ok) {
+        setStatut(ancien);
+        toast.error(res.message);
+      } else {
+        toast.success(`${etape.nom} : ${LIBELLES[s]}`);
+      }
     });
   }
 
   function sauverCommentaire() {
+    if ((commentaire || "") === (etape.commentaire || "")) return;
     start(async () => {
-      await modifierEtape({ etapeId: etape.id, statut, commentaire, projetId });
+      const res = await modifierEtape({ etapeId: etape.id, statut, commentaire, projetId });
+      if (!res.ok) toast.error(res.message);
+      else toast.success("Commentaire enregistré");
     });
   }
 

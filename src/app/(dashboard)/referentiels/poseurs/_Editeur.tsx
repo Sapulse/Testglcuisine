@@ -1,9 +1,12 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { useState, useTransition } from "react";
 import { Plus, Trash2, Check, X, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/metier/ConfirmDialog";
 import {
   supprimerPoseur,
   upsertPoseur,
@@ -69,10 +72,17 @@ function LigneLecture({ p, onEdit }: { p: Poseur; onEdit: () => void }) {
   const [err, setErr] = useState<string | null>(null);
 
   function onDelete() {
-    if (!confirm(`Supprimer ${p.prenom} ${p.nom} ?`)) return;
-    start(async () => {
-      const res = await supprimerPoseur(p.id);
-      if (!res.ok) setErr(res.message);
+    return new Promise<void>((resolve) => {
+      start(async () => {
+        const res = await supprimerPoseur(p.id);
+        if (!res.ok) {
+          setErr(res.message);
+          toast.error(res.message);
+        } else {
+          toast.success(`${p.prenom} ${p.nom} supprimé`);
+        }
+        resolve();
+      });
     });
   }
 
@@ -100,13 +110,21 @@ function LigneLecture({ p, onEdit }: { p: Poseur; onEdit: () => void }) {
           >
             <Pencil className="h-4 w-4" />
           </button>
-          <button
-            onClick={onDelete}
-            className="rounded p-1 text-slate-500 hover:bg-red-100 hover:text-red-700"
-            disabled={pending}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <ConfirmDialog
+            titre={`Supprimer ${p.prenom} ${p.nom} ?`}
+            description="Action irréversible. Si des assignations existent, la suppression sera refusée."
+            labelConfirmer="Supprimer"
+            variant="destructive"
+            onConfirmer={onDelete}
+            trigger={
+              <button
+                className="rounded p-1 text-slate-500 hover:bg-red-100 hover:text-red-700"
+                disabled={pending}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            }
+          />
         </div>
         {err && <div className="mt-1 text-[10px] text-red-600">{err}</div>}
       </td>
@@ -130,6 +148,11 @@ function LigneEdit({
 
   function onValider() {
     setErr(null);
+    if (!nom.trim() || !prenom.trim()) {
+      setErr("Nom et prénom requis");
+      toast.error("Nom et prénom requis");
+      return;
+    }
     start(async () => {
       const res = await upsertPoseur(
         {
@@ -142,8 +165,10 @@ function LigneEdit({
       );
       if (!res.ok) {
         setErr(res.message);
+        toast.error(res.message);
         return;
       }
+      toast.success(initial ? "Fiche modifiée" : "Poseur ajouté");
       onTermine();
     });
   }
