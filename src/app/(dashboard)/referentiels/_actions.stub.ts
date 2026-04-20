@@ -1,4 +1,5 @@
 import type {
+  ClientRefInput,
   FournisseurInput,
   PoseurInput,
   VendeurInput,
@@ -40,5 +41,16 @@ export async function upsertVendeur(
 }
 
 export async function supprimerVendeur(_id: string): Promise<ActionResult> {
+  return { ok: false, message: DEMO_ERREUR };
+}
+
+export async function upsertClient(
+  _input: ClientRefInput,
+  _id?: string,
+): Promise<ActionResult> {
+  return { ok: false, message: DEMO_ERREUR };
+}
+
+export async function supprimerClient(_id: string): Promise<ActionResult> {
   return { ok: false, message: DEMO_ERREUR };
 }

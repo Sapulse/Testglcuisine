@@ -13,6 +13,7 @@ import {
   type ProjetInput,
 } from "@/lib/validations/projet";
 import { creerProjet } from "@/app/(dashboard)/projets/_actions";
+import { toast } from "sonner";
 import { useState } from "react";
 
 interface Option {
@@ -86,8 +87,10 @@ export function FormulaireProjet({
     const res = await creerProjet(data);
     if (!res.ok) {
       setErreurServeur(res.message);
+      toast.error(res.message);
       return;
     }
+    toast.success(`Projet ${data.reference} créé`);
     if (res.data) router.push(`/projets/${res.data.id}`);
   }
 

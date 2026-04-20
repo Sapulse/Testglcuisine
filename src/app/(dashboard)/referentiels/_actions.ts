@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import {
+  clientRefSchema,
   fournisseurSchema,
   poseurSchema,
   vendeurSchema,
+  type ClientRefInput,
   type FournisseurInput,
   type PoseurInput,
   type VendeurInput,
@@ -178,5 +180,69 @@ export async function supprimerVendeur(id: string): Promise<ActionResult> {
     return { ok: true };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "Erreur inconnue" };
+  }
+}
+
+// ─────────── Clients ───────────
+
+export async function upsertClient(
+  input: ClientRefInput,
+  id?: string,
+): Promise<ActionResult> {
+  const parsed = clientRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: "Validation échouée", erreurs: parsed.error.flatten().fieldErrors };
+  }
+  const d = parsed.data;
+  try {
+    if (id) {
+      await prisma.client.update({
+        where: { id },
+        data: {
+          nom: d.nom,
+          prenom: d.prenom,
+          telephone: d.telephone,
+          email: d.email ?? null,
+          adresse: d.adresse,
+          codePostal: d.codePostal,
+          ville: d.ville,
+        },
+      });
+    } else {
+      await prisma.client.create({
+        data: {
+          nom: d.nom,
+          prenom: d.prenom,
+          telephone: d.telephone,
+          email: d.email ?? null,
+          adresse: d.adresse,
+          codePostal: d.codePostal,
+          ville: d.ville,
+        },
+      });
+    }
+    revalidatePath("/referentiels/clients");
+    revalidatePath("/projets/nouveau");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Erreur inconnue" };
+  }
+}
+
+export async function supprimerClient(id: string): Promise<ActionResult> {
+  try {
+    await prisma.client.delete({ where: { id } });
+    revalidatePath("/referentiels/clients");
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      message:
+        e instanceof Error && e.message.includes("constraint")
+          ? "Impossible : projets liés à ce client."
+          : e instanceof Error
+            ? e.message
+            : "Erreur inconnue",
+    };
   }
 }

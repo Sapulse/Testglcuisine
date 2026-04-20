@@ -33,14 +33,35 @@ export async function comptesReferentiels() {
       fournisseurs: S.FOURNISSEURS.length,
       poseurs: S.POSEURS.length,
       vendeurs: S.VENDEURS.length,
+      clients: S.CLIENTS.length,
     };
   }
-  const [fournisseurs, poseurs, vendeurs] = await Promise.all([
+  const [fournisseurs, poseurs, vendeurs, clients] = await Promise.all([
     prisma.fournisseur.count(),
     prisma.poseur.count(),
     prisma.vendeur.count(),
+    prisma.client.count(),
   ]);
-  return { fournisseurs, poseurs, vendeurs };
+  return { fournisseurs, poseurs, vendeurs, clients };
+}
+
+export async function listerClientsRef() {
+  if (S.estModeStatique()) {
+    return [...S.CLIENTS]
+      .sort((a, b) => a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
+      .map((c) => ({
+        ...c,
+        nbProjets: S.PROJETS.filter((p) => p.clientId === c.id).length,
+      }));
+  }
+  const clients = await prisma.client.findMany({
+    include: { _count: { select: { projets: true } } },
+    orderBy: [{ nom: "asc" }, { prenom: "asc" }],
+  });
+  return clients.map((c) => ({
+    ...c,
+    nbProjets: c._count.projets,
+  }));
 }
 
 export async function projetsAvecClient() {

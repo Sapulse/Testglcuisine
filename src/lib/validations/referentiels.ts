@@ -39,6 +39,18 @@ export const poseurSchema = z.object({
 
 export type PoseurInput = z.infer<typeof poseurSchema>;
 
+export const clientRefSchema = z.object({
+  nom: z.string().trim().min(1, "Nom requis"),
+  prenom: z.string().trim().min(1, "Prénom requis"),
+  telephone: z.string().trim().min(6, "Téléphone requis"),
+  email: emailOpt,
+  adresse: z.string().trim().min(1, "Adresse requise"),
+  codePostal: z.string().trim().regex(/^\d{5}$/, "Code postal sur 5 chiffres"),
+  ville: z.string().trim().min(1, "Ville requise"),
+});
+
+export type ClientRefInput = z.infer<typeof clientRefSchema>;
+
 export const vendeurSchema = z.object({
   nom: z.string().trim().min(1, "Nom requis"),
   prenom: z.string().trim().min(1, "Prénom requis"),

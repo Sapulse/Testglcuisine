@@ -18,6 +18,7 @@ import {
   LIBELLES_CATEGORIE,
 } from "@/lib/validations/commande";
 import { creerSav } from "@/app/(dashboard)/sav/_actions";
+import { toast } from "sonner";
 
 interface Option {
   id: string;
@@ -57,8 +58,10 @@ export function FormulaireSav({
     const res = await creerSav(data);
     if (!res.ok) {
       setErreurServeur(res.message);
+      toast.error(res.message);
       return;
     }
+    toast.success("Ticket SAV créé");
     if (res.data) router.push(`/sav/${res.data.id}`);
   }
 

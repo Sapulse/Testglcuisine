@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { Building2, HardHat, UserRound } from "lucide-react";
+import { Building2, HardHat, UserRound, Users } from "lucide-react";
 import { comptesReferentiels } from "@/lib/queries/referentiels";
 export const dynamic = "force-dynamic";
 
 
 export default async function ReferentielsPage() {
-  const { fournisseurs, poseurs, vendeurs } = await comptesReferentiels();
+  const { fournisseurs, poseurs, vendeurs, clients } = await comptesReferentiels();
 
   const entrees = [
+    { href: "/referentiels/clients", titre: "Clients", nb: clients, icone: Users },
     {
       href: "/referentiels/fournisseurs",
       titre: "Fournisseurs",
@@ -26,7 +27,7 @@ export default async function ReferentielsPage() {
           Gestion des fiches fournisseurs, poseurs et vendeurs.
         </p>
       </header>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {entrees.map(({ href, titre, nb, icone: Icone }) => (
           <Link
             key={href}
