@@ -136,6 +136,7 @@ export interface SnapshotProjet {
   estRenovation: boolean;
   dateCreation: Date;
   dateSignature: Date | null;
+  notes: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -318,6 +319,7 @@ export const PROJETS: SnapshotProjet[] = [
     estRenovation: true,
     dateCreation: NOW,
     dateSignature: new Date("2026-02-14"),
+    notes: "Cliente très exigeante sur les finitions — vérifier 2× les coloris.",
     createdAt: NOW,
     updatedAt: NOW,
   },
@@ -337,6 +339,7 @@ export const PROJETS: SnapshotProjet[] = [
     estRenovation: false,
     dateCreation: NOW,
     dateSignature: new Date("2026-03-02"),
+    notes: null,
     createdAt: NOW,
     updatedAt: NOW,
   },
@@ -356,6 +359,7 @@ export const PROJETS: SnapshotProjet[] = [
     estRenovation: true,
     dateCreation: NOW,
     dateSignature: new Date("2026-01-18"),
+    notes: "Rénovation complète — coupure eau prévue le matin de la dépose.",
     createdAt: NOW,
     updatedAt: NOW,
   },

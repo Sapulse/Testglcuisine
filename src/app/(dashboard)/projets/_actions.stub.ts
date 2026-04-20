@@ -42,3 +42,10 @@ export async function modifierEtape(_input: {
 }): Promise<ActionResult> {
   return { ok: false, message: DEMO_ERREUR };
 }
+
+export async function enregistrerNotes(
+  _projetId: string,
+  _notes: string,
+): Promise<ActionResult> {
+  return { ok: false, message: DEMO_ERREUR };
+}

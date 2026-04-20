@@ -232,3 +232,20 @@ export async function modifierEtape(input: {
     return { ok: false, message: e instanceof Error ? e.message : "Erreur inconnue" };
   }
 }
+
+/** Enregistre les notes libres d'un projet. */
+export async function enregistrerNotes(
+  projetId: string,
+  notes: string,
+): Promise<ActionResult> {
+  try {
+    await prisma.projet.update({
+      where: { id: projetId },
+      data: { notes: notes.trim() || null },
+    });
+    revalidatePath(`/projets/${projetId}`);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Erreur inconnue" };
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import {
   ajouterAuJournal,
   modifierSav,
@@ -10,6 +11,7 @@ import type { StatutSAV } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfirmDialog } from "@/components/metier/ConfirmDialog";
 import {
   LIBELLES_STATUT_SAV,
   STATUTS_SAV,
@@ -57,19 +59,28 @@ export function EditeurSav(props: Props) {
         dateIntervention: dateIntervention || undefined,
         dateCloture: dateCloture || undefined,
       });
-      if (!res.ok) setErr(res.message);
+      if (!res.ok) {
+        setErr(res.message);
+        toast.error(res.message);
+      } else {
+        toast.success("Ticket SAV mis à jour");
+      }
     });
   }
 
   function onSupprimer() {
-    if (!confirm("Supprimer ce ticket SAV ?")) return;
-    start(async () => {
-      const res = await supprimerSav(props.id);
-      if (!res.ok) {
-        setErr(res.message);
-        return;
-      }
-      router.push("/sav");
+    return new Promise<void>((resolve) => {
+      start(async () => {
+        const res = await supprimerSav(props.id);
+        if (!res.ok) {
+          setErr(res.message);
+          toast.error(res.message);
+        } else {
+          toast.success("Ticket supprimé");
+          router.push("/sav");
+        }
+        resolve();
+      });
     });
   }
 
@@ -134,16 +145,24 @@ export function EditeurSav(props: Props) {
       </div>
       {err && <div className="px-3 pb-2 text-xs text-red-600">{err}</div>}
       <footer className="flex justify-between gap-2 border-t border-slate-200 px-3 py-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSupprimer}
-          disabled={pending}
-          className="text-red-700 hover:bg-red-50"
-        >
-          <Trash2 className="h-4 w-4" />
-          Supprimer
-        </Button>
+        <ConfirmDialog
+          titre="Supprimer ce ticket SAV ?"
+          description="Le ticket et son journal complet seront supprimés. Action irréversible."
+          labelConfirmer="Supprimer"
+          variant="destructive"
+          onConfirmer={onSupprimer}
+          trigger={
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              className="text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              Supprimer
+            </Button>
+          }
+        />
         <Button size="sm" onClick={onEnregistrer} disabled={pending}>
           {pending ? "Enregistrement…" : "Enregistrer"}
         </Button>
@@ -162,6 +181,7 @@ export function FormulaireJournal({ savId }: { savId: string }) {
   function onAjouter() {
     if (!commentaire.trim()) {
       setErr("Commentaire requis");
+      toast.error("Commentaire requis");
       return;
     }
     setErr(null);
@@ -174,8 +194,10 @@ export function FormulaireJournal({ savId }: { savId: string }) {
       });
       if (!res.ok) {
         setErr(res.message);
+        toast.error(res.message);
         return;
       }
+      toast.success("Entrée ajoutée au journal");
       setCommentaire("");
       setAuteur("");
       setType("note");

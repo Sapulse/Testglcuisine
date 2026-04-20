@@ -1,14 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type {
   CategorieCommande,
   StatutCommande,
   StatutLivraison,
 } from "@prisma/client";
 import { Plus, Trash2, Check, Pencil, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
+import { ConfirmDialog } from "@/components/metier/ConfirmDialog";
+import { QuickAddFournisseur } from "@/components/metier/QuickAddFournisseur";
 import { cn } from "@/lib/utils";
 import {
   creerCommande,
@@ -126,9 +131,10 @@ function LigneLecture({
   const [pending, start] = useTransition();
 
   function onDelete() {
-    if (!confirm("Supprimer cette commande ?")) return;
     start(async () => {
-      await supprimerCommande(projetId, c.id);
+      const res = await supprimerCommande(projetId, c.id);
+      if (!res.ok) toast.error(res.message);
+      else toast.success(`Commande ${LIBELLES_CATEGORIE[c.categorie]} supprimée`);
     });
   }
 
@@ -185,14 +191,22 @@ function LigneLecture({
           >
             <Pencil className="h-4 w-4" />
           </button>
-          <button
-            onClick={onDelete}
-            className="rounded p-1 text-slate-500 hover:bg-red-100 hover:text-red-700"
-            title="Supprimer"
-            disabled={pending}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <ConfirmDialog
+            titre="Supprimer cette commande ?"
+            description={`${LIBELLES_CATEGORIE[c.categorie]} chez ${c.fournisseurNom}. Action irréversible.`}
+            labelConfirmer="Supprimer"
+            variant="destructive"
+            onConfirmer={onDelete}
+            trigger={
+              <button
+                className="rounded p-1 text-slate-500 hover:bg-red-100 hover:text-red-700"
+                title="Supprimer"
+                disabled={pending}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            }
+          />
         </div>
       </td>
     </tr>
@@ -227,9 +241,15 @@ function LigneEdition({
   const [remarque, setRemarque] = useState(initial?.remarque ?? "");
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const router = useRouter();
 
   function onValider() {
     setErr(null);
+    if (!fournisseurId) {
+      setErr("Sélectionne un fournisseur");
+      return;
+    }
     start(async () => {
       const payload = {
         fournisseurId,
@@ -245,8 +265,10 @@ function LigneEdition({
         : await creerCommande({ projetId, ...payload });
       if (!res.ok) {
         setErr(res.message);
+        toast.error(res.message);
         return;
       }
+      toast.success(initial ? "Commande modifiée" : "Commande créée");
       onTermine();
     });
   }
@@ -267,17 +289,22 @@ function LigneEdition({
         </select>
       </td>
       <td className="px-2 py-2">
-        <select
+        <Combobox
+          options={fournisseurs.map((f) => ({ value: f.id, label: f.nom }))}
           value={fournisseurId}
-          onChange={(e) => setFournisseurId(e.target.value)}
-          className="h-8 w-full rounded border border-slate-200 bg-white px-1 text-xs"
-        >
-          {fournisseurs.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.nom}
-            </option>
-          ))}
-        </select>
+          onChange={setFournisseurId}
+          placeholder="Choisir…"
+          recherchePlaceholder="Rechercher un fournisseur…"
+          className="text-xs"
+          onCreer={() => setQuickAddOpen(true)}
+          labelCreer="+ Nouveau fournisseur"
+        />
+        <QuickAddFournisseur
+          open={quickAddOpen}
+          onOpenChange={setQuickAddOpen}
+          categorieDefaut={categorie}
+          onCree={() => router.refresh()}
+        />
       </td>
       <td className="px-2 py-2">
         <select

@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/metier/ConfirmDialog";
 import {
   assignerPoseur,
   retirerAssignation,
@@ -47,16 +49,22 @@ export function AssignationsPoseurs({
       const res = await assignerPoseur({ projetId, poseurId, semaine, annee, role });
       if (!res.ok) {
         setErr(res.message);
+        toast.error(res.message);
         return;
       }
+      toast.success("Poseur assigné");
       setAjout(false);
     });
   }
 
   function onRetirer(id: string) {
-    if (!confirm("Retirer cette assignation ?")) return;
-    start(async () => {
-      await retirerAssignation(projetId, id);
+    return new Promise<void>((resolve) => {
+      start(async () => {
+        const res = await retirerAssignation(projetId, id);
+        if (!res.ok) toast.error(res.message);
+        else toast.success("Assignation retirée");
+        resolve();
+      });
     });
   }
 
@@ -141,14 +149,22 @@ export function AssignationsPoseurs({
                 <span className="rounded bg-white px-1.5 py-0.5 text-[10px] uppercase text-slate-600">
                   {a.role}
                 </span>
-                <button
-                  onClick={() => onRetirer(a.id)}
-                  disabled={pending}
-                  className="ml-auto rounded p-1 text-slate-400 hover:bg-red-100 hover:text-red-700"
-                  title="Retirer"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <ConfirmDialog
+                  titre="Retirer cette assignation ?"
+                  description={`${a.poseurNom} ne sera plus assigné à ${a.semaine} ${a.annee}.`}
+                  labelConfirmer="Retirer"
+                  variant="destructive"
+                  onConfirmer={() => onRetirer(a.id)}
+                  trigger={
+                    <button
+                      disabled={pending}
+                      className="ml-auto rounded p-1 text-slate-400 hover:bg-red-100 hover:text-red-700"
+                      title="Retirer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  }
+                />
               </li>
             ))}
           </ul>

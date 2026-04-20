@@ -15,6 +15,7 @@ import { listerPoseurs } from "@/lib/queries/projets";
 import { cn } from "@/lib/utils";
 import { PROJETS } from "@/lib/data/snapshot";
 import { BoutonDupliquer } from "./_BoutonDupliquer";
+import { NotesProjet } from "./_NotesProjet";
 export const dynamic = "force-dynamic";
 
 
@@ -143,6 +144,9 @@ export default async function FicheProjetPage({
                   : "—"}
               </Ligne>
             </Bloc>
+          </div>
+          <div className="mt-4">
+            <NotesProjet projetId={projet.id} notesInitiales={projet.notes} />
           </div>
         </TabsContent>
 

@@ -110,6 +110,7 @@ model Projet {
   estRenovation    Boolean  @default(false)
   dateCreation     DateTime @default(now())
   dateSignature    DateTime?
+  notes            String?  // Notes libres métier (à part du SAV)
 
   etapes           EtapeProjet[]
   commandes        Commande[]
