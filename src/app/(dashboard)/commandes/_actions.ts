@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import type { StatutCommande, StatutLivraison } from "@prisma/client";
 import {
   commandeSchema,
   commandeUpdateSchema,
@@ -82,6 +83,27 @@ export async function supprimerCommande(
 ): Promise<ActionResult> {
   try {
     await prisma.commande.delete({ where: { id } });
+    revalider(projetId);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Erreur inconnue" };
+  }
+}
+
+/** Modifie uniquement statut livraison + statut commande (cycles rapides depuis la grille). */
+export async function modifierStatutsCommande(
+  projetId: string,
+  id: string,
+  patch: { statutCommande?: StatutCommande; statutLivraison?: StatutLivraison },
+): Promise<ActionResult> {
+  try {
+    await prisma.commande.update({
+      where: { id },
+      data: {
+        ...(patch.statutCommande && { statutCommande: patch.statutCommande }),
+        ...(patch.statutLivraison && { statutLivraison: patch.statutLivraison }),
+      },
+    });
     revalider(projetId);
     return { ok: true };
   } catch (e) {

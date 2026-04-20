@@ -1,3 +1,4 @@
+import type { StatutCommande, StatutLivraison } from "@prisma/client";
 import type { CommandeInput, CommandeUpdateInput } from "@/lib/validations/commande";
 
 const DEMO_ERREUR = "Mode démo en lecture seule — cette action est désactivée.";
@@ -22,6 +23,14 @@ export async function modifierCommande(
 export async function supprimerCommande(
   _projetId: string,
   _id: string,
+): Promise<ActionResult> {
+  return { ok: false, message: DEMO_ERREUR };
+}
+
+export async function modifierStatutsCommande(
+  _projetId: string,
+  _id: string,
+  _patch: { statutCommande?: StatutCommande; statutLivraison?: StatutLivraison },
 ): Promise<ActionResult> {
   return { ok: false, message: DEMO_ERREUR };
 }

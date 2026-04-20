@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, LayoutGrid } from "lucide-react";
 import { BadgeStatut } from "@/components/metier/BadgeStatut";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,14 +93,22 @@ export function ProjetsListeClient({
             {filtered.length} / {projets.length} chantier(s) · liste filtrable
           </p>
         </div>
-        {!isDemo && (
-          <Button asChild size="sm">
-            <Link href="/projets/nouveau">
-              <Plus className="h-4 w-4" />
-              Nouveau projet
+        <div className="flex items-center gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href="/projets/grille">
+              <LayoutGrid className="h-4 w-4" />
+              Vue grille
             </Link>
           </Button>
-        )}
+          {!isDemo && (
+            <Button asChild size="sm">
+              <Link href="/projets/nouveau">
+                <Plus className="h-4 w-4" />
+                Nouveau projet
+              </Link>
+            </Button>
+          )}
+        </div>
       </header>
 
       <FiltresProjets
