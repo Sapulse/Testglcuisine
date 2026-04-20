@@ -14,6 +14,8 @@ import {
 } from "@/app/(dashboard)/referentiels/_actions";
 import { cn } from "@/lib/utils";
 import { UserRound } from "lucide-react";
+import { useLocalStoreData } from "@/lib/data/use-local-store";
+import { clientsPourListe } from "@/lib/data/transformers";
 
 interface Client {
   id: string;
@@ -30,6 +32,8 @@ interface Client {
 export function EditeurClients({ initial }: { initial: Client[] }) {
   const [ajout, setAjout] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const store = useLocalStoreData();
+  const clients: Client[] = store ? clientsPourListe(store) : initial;
 
   return (
     <div className="flex flex-col gap-3">
@@ -39,7 +43,7 @@ export function EditeurClients({ initial }: { initial: Client[] }) {
           Nouveau client
         </Button>
       </div>
-      {initial.length === 0 && !ajout ? (
+      {clients.length === 0 && !ajout ? (
         <EmptyState
           icone={UserRound}
           titre="Aucun client"
@@ -64,7 +68,7 @@ export function EditeurClients({ initial }: { initial: Client[] }) {
               {ajout && (
                 <LigneEdit initial={null} onTermine={() => setAjout(false)} />
               )}
-              {initial.map((c) =>
+              {clients.map((c) =>
                 editId === c.id ? (
                   <LigneEdit
                     key={c.id}

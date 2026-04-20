@@ -7,6 +7,8 @@ import { Plus, Trash2, Check, X, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/metier/ConfirmDialog";
+import { useLocalStoreData } from "@/lib/data/use-local-store";
+import { vendeursPourListe } from "@/lib/data/transformers";
 import {
   supprimerVendeur,
   upsertVendeur,
@@ -24,6 +26,16 @@ interface Vendeur {
 export function EditeurVendeurs({ initial }: { initial: Vendeur[] }) {
   const [ajout, setAjout] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const store = useLocalStoreData();
+  const vendeurs: Vendeur[] = store
+    ? vendeursPourListe(store).map((v) => ({
+        id: v.id,
+        nom: v.nom,
+        prenom: v.prenom,
+        telephone: v.telephone,
+        email: v.email,
+      }))
+    : initial;
 
   return (
     <div className="flex flex-col gap-3">
@@ -46,14 +58,14 @@ export function EditeurVendeurs({ initial }: { initial: Vendeur[] }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {ajout && <LigneEdit initial={null} onTermine={() => setAjout(false)} />}
-            {initial.map((v) =>
+            {vendeurs.map((v) =>
               editId === v.id ? (
                 <LigneEdit key={v.id} initial={v} onTermine={() => setEditId(null)} />
               ) : (
                 <LigneLecture key={v.id} v={v} onEdit={() => setEditId(v.id)} />
               ),
             )}
-            {initial.length === 0 && !ajout && (
+            {vendeurs.length === 0 && !ajout && (
               <tr>
                 <td colSpan={5} className="px-3 py-6 text-center text-sm text-slate-500">
                   Aucun vendeur.

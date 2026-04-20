@@ -7,6 +7,8 @@ import { Plus, Trash2, Check, X, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/metier/ConfirmDialog";
+import { useLocalStoreData } from "@/lib/data/use-local-store";
+import { fournisseursPourListe } from "@/lib/data/transformers";
 import {
   supprimerFournisseur,
   upsertFournisseur,
@@ -29,6 +31,17 @@ interface Fournisseur {
 export function EditeurFournisseurs({ initial }: { initial: Fournisseur[] }) {
   const [ajout, setAjout] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const store = useLocalStoreData();
+  const fournisseurs: Fournisseur[] = store
+    ? fournisseursPourListe(store).map((f) => ({
+        id: f.id,
+        nom: f.nom,
+        contact: f.contact,
+        telephone: f.telephone,
+        email: f.email,
+        categories: f.categories,
+      }))
+    : initial;
 
   return (
     <div className="flex flex-col gap-3">
@@ -52,14 +65,14 @@ export function EditeurFournisseurs({ initial }: { initial: Fournisseur[] }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {ajout && <Ligne mode="ajout" initial={null} onTermine={() => setAjout(false)} />}
-            {initial.map((f) =>
+            {fournisseurs.map((f) =>
               editId === f.id ? (
                 <Ligne key={f.id} mode="edit" initial={f} onTermine={() => setEditId(null)} />
               ) : (
                 <LigneLecture key={f.id} f={f} onEdit={() => setEditId(f.id)} />
               ),
             )}
-            {initial.length === 0 && !ajout && (
+            {fournisseurs.length === 0 && !ajout && (
               <tr>
                 <td colSpan={6} className="px-3 py-6 text-center text-sm text-slate-500">
                   Aucun fournisseur. Clique sur « Nouveau ».

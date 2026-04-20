@@ -3,33 +3,80 @@ import type {
   SavUpdateInput,
   JournalAjoutInput,
 } from "@/lib/validations/sav";
-
-const DEMO_ERREUR = "Mode démo en lecture seule — cette action est désactivée.";
+import {
+  ajouterSav,
+  modifierSavStore,
+  supprimerSavStore,
+  ajouterJournalSav,
+} from "@/lib/data/local-store";
 
 export type ActionResult<T = undefined> =
   | { ok: true; data?: T }
   | { ok: false; message: string; erreurs?: Record<string, string[]> };
 
+function safe<T>(fn: () => T): ActionResult<T> {
+  try {
+    return { ok: true, data: fn() };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Erreur" };
+  }
+}
+
 export async function creerSav(
-  _input: SavInput,
+  input: SavInput,
 ): Promise<ActionResult<{ id: string }>> {
-  return { ok: false, message: DEMO_ERREUR };
+  return safe(() => {
+    const sav = ajouterSav(
+      {
+        projetId: input.projetId,
+        fournisseurId: input.fournisseurId ?? null,
+        categorie: input.categorie ?? null,
+        typeProbleme: input.typeProbleme,
+        statut: input.statut,
+        bloquant: input.bloquant,
+        dateOuverture: new Date(),
+        dateIntervention: input.dateIntervention ? new Date(input.dateIntervention) : null,
+        dateCloture: input.dateCloture ? new Date(input.dateCloture) : null,
+        commentaire: input.commentaire ?? null,
+      },
+      `Ticket ouvert : ${input.typeProbleme}`,
+    );
+    return { id: sav.id };
+  });
 }
 
-export async function creerSavEtRediriger(_input: SavInput) {
-  return { ok: false as const, message: DEMO_ERREUR };
+export async function creerSavEtRediriger(input: SavInput) {
+  return creerSav(input);
 }
 
-export async function modifierSav(_input: SavUpdateInput): Promise<ActionResult> {
-  return { ok: false, message: DEMO_ERREUR };
+export async function modifierSav(input: SavUpdateInput): Promise<ActionResult> {
+  return safe(() => {
+    modifierSavStore(input.id, {
+      fournisseurId: input.fournisseurId ?? null,
+      categorie: input.categorie ?? null,
+      ...(input.typeProbleme && { typeProbleme: input.typeProbleme }),
+      ...(input.statut && { statut: input.statut }),
+      ...(input.bloquant !== undefined && { bloquant: input.bloquant }),
+      commentaire: input.commentaire ?? null,
+      dateIntervention: input.dateIntervention ? new Date(input.dateIntervention) : null,
+      dateCloture: input.dateCloture ? new Date(input.dateCloture) : null,
+    });
+    return undefined;
+  });
 }
 
-export async function supprimerSav(_id: string): Promise<ActionResult> {
-  return { ok: false, message: DEMO_ERREUR };
+export async function supprimerSav(id: string): Promise<ActionResult> {
+  return safe(() => {
+    supprimerSavStore(id);
+    return undefined;
+  });
 }
 
 export async function ajouterAuJournal(
-  _input: JournalAjoutInput,
+  input: JournalAjoutInput,
 ): Promise<ActionResult> {
-  return { ok: false, message: DEMO_ERREUR };
+  return safe(() => {
+    ajouterJournalSav(input.savId, input.type, input.commentaire, input.auteur ?? null);
+    return undefined;
+  });
 }
